@@ -13,7 +13,8 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "tauri:build:dmg": "tauri build --target universal-apple-darwin"
+    "tauri:build:dmg": "tauri build --target universal-apple-darwin",
+    "tauri:build:win-arm": "tauri build --target aarch64-pc-windows-msvc"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -76,6 +77,8 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
+    "electron": "^38.1.0",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
