@@ -175,12 +175,12 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
     <>
       <div className="space-y-4">
         {/* Example Chips - Above input like ChatGPT */}
-        <div className="flex flex-wrap gap-2 justify-center">
+        <div className="flex flex-wrap gap-3 justify-center">
           {['Casual Brunch', 'Formal Wedding', '80s Themed Party'].map((example) => (
               <button
                 key={example}
                 onClick={() => setPrompt(example)}
-                className="px-4 py-2 bg-secondary hover:bg-accent/10 text-secondary-foreground hover:text-accent rounded-full text-sm font-light transition-colors duration-200 border border-border/50 hover:border-accent/30"
+                className="px-6 py-3 bg-secondary/50 hover:bg-accent/20 text-secondary-foreground hover:text-accent-foreground rounded-full text-sm font-medium transition-all duration-300 border border-border/30 hover:border-accent/50 hover:shadow-lg hover:-translate-y-0.5 backdrop-blur-sm"
               >
                 {example}
               </button>
@@ -188,7 +188,7 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
         </div>
         
         <div className="relative">
-          <div className="bg-white border-2 border-border rounded-2xl py-6 shadow-sm hover:shadow-md transition-all duration-200 focus-within:border-primary/50 focus-within:shadow-lg flex items-center">
+          <div className="glass-effect border-2 border-border/20 rounded-3xl py-8 shadow-lg hover:shadow-2xl transition-all duration-500 focus-within:border-accent/50 focus-within:shadow-3xl flex items-center backdrop-blur-md">
             {/* Upload Button */}
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -209,7 +209,7 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="What's the occasion?"
-              className="flex-1 text-xl border-0 p-0 h-8 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground mr-6"
+              className="flex-1 text-xl border-0 p-0 h-8 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60 mr-6 bg-transparent font-light tracking-wide"
               onKeyPress={(e) => e.key === 'Enter' && generateOutfit()}
             />
           </div>
@@ -227,7 +227,7 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
         <Button 
           onClick={generateOutfit}
           disabled={!prompt.trim() || wardrobeItems.length === 0 || isGenerating}
-          className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors duration-200 text-base font-medium"
+          className="w-full h-12 bg-slate-800 text-white hover:bg-slate-700 disabled:opacity-50 transition-all duration-300 font-medium tracking-wide rounded-2xl shadow-sm"
           size="lg"
         >
           {isGenerating ? (
@@ -242,7 +242,7 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
             </>
           )}
         </Button>
-        
+
         {wardrobeItems.length === 0 && (
           <p className="text-sm text-muted-foreground text-center">
             Add some clothes to your wardrobe first!

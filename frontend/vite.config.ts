@@ -17,6 +17,7 @@ export default defineConfig(async ({ mode }) => {
   }
 
   return {
+    base: "./", // Use relative paths for Electron
     server: {
       host: "::",
       port: 8080,

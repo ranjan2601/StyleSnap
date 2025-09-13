@@ -24,12 +24,23 @@ function createWindow() {
   });
 
   // Load the app
+  // Always use built files for now to avoid blank screen
+  const indexPath = path.join(__dirname, '../dist/index.html');
+  console.log('Loading file from:', indexPath);
+  
+  mainWindow.loadFile(indexPath).catch(err => {
+    console.error('Failed to load file:', err);
+    // Fallback: try loading from different path
+    const fallbackPath = path.join(process.cwd(), 'dist/index.html');
+    console.log('Trying fallback path:', fallbackPath);
+    mainWindow.loadFile(fallbackPath).catch(fallbackErr => {
+      console.error('Fallback also failed:', fallbackErr);
+    });
+  });
+  
+  // Open DevTools in development
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
-    // Open DevTools in development
     mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 
   // Show window when ready to prevent visual flash

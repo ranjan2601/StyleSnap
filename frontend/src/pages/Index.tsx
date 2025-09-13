@@ -62,22 +62,22 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b border-border bg-white sticky top-0 z-40">
+      <header className="border-b border-border/20 bg-white/90 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20">
             <div className="flex items-center gap-4">
-              <div className="w-8 h-8 bg-accent rounded-md flex items-center justify-center">
-                <Camera className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 gold-accent rounded-xl flex items-center justify-center shadow-lg">
+                <Camera className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-foreground">StyleSnap</h1>
+                <h1 className="text-2xl luxury-text text-foreground">StyleSnap</h1>
               </div>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-8">
               <Link to="/wardrobe">
                 <Button 
                   variant="outline"
-                  className="border-border hover:bg-secondary transition-colors duration-200"
+                  className="luxury-button border-accent/30 hover:bg-accent/10 transition-all duration-300 font-medium tracking-wide"
                 >
                   Your Wardrobe
                 </Button>
@@ -90,11 +90,11 @@ const Index = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col justify-center">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 py-16">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">
+          <div className="text-center mb-20">
+            <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-8 tracking-tight leading-none">
               Your Personal AI Stylist
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed font-light">
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">
               Describe any occasion and let our AI create the perfect outfit from your wardrobe. 
               Never wonder what to wear again.
             </p>
