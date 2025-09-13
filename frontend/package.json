@@ -4,20 +4,16 @@
   "description": "AI-Powered Fashion Styling App",
   "private": true,
   "version": "1.0.0",
-  "main": "electron/main.js",
-  "homepage": "./",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "electron": "electron .",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:pack": "npm run build && electron-builder --dir",
-    "electron:dist": "npm run build && electron-builder",
-    "electron:dist:win": "npm run build && electron-builder --win --x64",
-    "electron:dist:win-arm": "npm run build && electron-builder --win --arm64"
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:build:dmg": "tauri build --target universal-apple-darwin"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -74,14 +70,12 @@
   "devDependencies": {
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
+    "@tauri-apps/cli": "^2.8.4",
     "@types/node": "^22.16.5",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
-    "concurrently": "^8.2.2",
-    "electron": "^38.1.0",
-    "electron-builder": "^26.0.12",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
@@ -91,59 +85,6 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
-    "vite": "^5.4.19",
-    "wait-on": "^7.2.0"
-  },
-  "build": {
-    "appId": "com.stylesnap.app",
-    "productName": "StyleSnap",
-    "directories": {
-      "output": "dist-electron"
-    },
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    },
-    "mac": {
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ]
-    },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "public/favicon.ico"
-    }
+    "vite": "^5.4.19"
   }
 }
