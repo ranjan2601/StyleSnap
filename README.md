@@ -417,5 +417,143 @@ Add the slug to the workspace_slug variable in config.yaml
 Usage
 You have the option to use a terminal or gradio chat interface the talk with the bot. After completing setup, run the app you choose from the command line:
 
+```powershell
 # terminal
 python src/terminal_chatbot.py
+```
+
+
+## 🚀 Step 7: Launch Backend Services
+
+### 7.1 Start CLIP Service (Port 8001)
+```powershell
+# Navigate to clip directory
+cd clip
+
+# Activate Python environment
+python -m venv clip-env
+.\clip-env\Scripts\Activate.ps1
+
+# Install requirements
+pip install -r requirements.txt
+
+# Start CLIP FastAPI service
+uvicorn fast_clip_service:app --host 0.0.0.0 --port 8001 --reload
+```
+
+### 7.2 Start Main Backend API (Port 7000)
+```powershell
+# Open new PowerShell window
+# Navigate to backend directory
+cd backend
+
+# Activate Python environment
+python -m venv backend-env
+.\backend-env\Scripts\Activate.ps1
+
+# Install requirements
+pip install -r requirements.txt
+
+# Initialize SQLite database
+python init_db.py
+
+# Start main FastAPI backend
+uvicorn main:app --host 0.0.0.0 --port 7000 --reload
+```
+
+### 7.3 Verify Backend Services
+```powershell
+# Test CLIP service
+curl http://localhost:8001/health
+
+# Test main backend
+curl http://localhost:7000/health
+
+# Check API docs
+# CLIP: http://localhost:8001/docs
+# Backend: http://localhost:7000/docs
+```
+
+---
+
+## 🎨 Step 8: Launch Frontend Application
+
+### 8.1 Install Frontend Dependencies
+```powershell
+# Open new PowerShell window
+# Navigate to frontend directory
+cd frontend
+
+# Install Node.js dependencies
+npm install
+```
+
+### 8.2 Build Frontend Assets
+```powershell
+# Build production assets
+npm run build
+
+# Verify build completed
+dir dist
+```
+
+### 8.3 Start Development Server
+```powershell
+# Start Vite development server
+npm run dev
+
+# Frontend will be available at:
+# http://localhost:5173
+```
+
+### 8.4 Alternative: Run Tauri Desktop App
+```powershell
+# For desktop app experience
+npm run tauri:dev
+
+# Or build desktop executable
+npm run tauri:build
+```
+
+---
+
+## 🔗 Step 9: Service Integration
+
+### 9.1 Verify All Services Running
+- ✅ **CLIP Service**: http://localhost:8001
+- ✅ **Backend API**: http://localhost:7000  
+- ✅ **Frontend**: http://localhost:5173
+- ✅ **Stable Diffusion**: http://127.0.0.1:7860
+
+### 9.2 Test Full Pipeline
+1. **Upload clothing item** → Backend stores in SQLite
+2. **CLIP processes image** → Returns fashion tags
+3. **Generate outfit prompt** → Calls Llama 3.1 8B
+4. **Create outfit visualization** → Stable Diffusion NPU
+5. **Display results** → Frontend shows recommendations
+
+### 9.3 Environment Variables
+```powershell
+# Set required environment variables
+$env:CLIP_SERVICE_URL = "http://localhost:8001"
+$env:BACKEND_API_URL = "http://localhost:7000"
+$env:STABLE_DIFFUSION_URL = "http://127.0.0.1:7860"
+```
+
+---
+
+## 📋 Quick Start Summary
+
+1. **Setup Stable Diffusion** (Steps 1-6) - NPU image generation
+2. **Setup Llama 3.1 8B** (Stack 3) - NPU text generation  
+3. **Launch Backend** (Step 7) - CLIP + Main API services
+4. **Launch Frontend** (Step 8) - React/Tauri application
+5. **Test Integration** (Step 9) - Full fashion pipeline
+
+This setup ensures all three AI models (CLIP, Stable Diffusion, Llama 3.1 8B) run on the NPU while the frontend and backend coordinate the fashion styling workflow! 🎨✨
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
