@@ -1,8 +1,8 @@
-# Virtual Fashion Assistant 👗🤖
+# StyleSnap 👗🤖
 
 Introducing an intelligent revolution in personal style — this project combines **edge AI** and **advanced generative models** to deliver a seamless **Virtual Fashion Assistant**, designed specifically for the **Edge AI Developer Hackathon 2025**.  
 
-Powered by **Sony's Snapdragon X Elite** platform, it harnesses the capabilities of **OpenAI CLIP**, **Anything LLM (Ollama 3.1 8B)**, and **Stable Diffusion** running natively on-device using the **NPU**, thus transforming style discovery, outfit recommendations, and closet management for modern users under **real-time constraints**.  
+Powered by **Qualcomm's Snapdragon X Elite** platform, it harnesses the capabilities of **OpenAI CLIP**, **Anything LLM (Ollama 3.1 8B)**, and **Stable Diffusion** running natively on-device using the **NPU**, thus transforming style discovery, outfit recommendations, and closet management for modern users under **real-time constraints**.  
 
 ---
 
@@ -425,7 +425,7 @@ python src/terminal_chatbot.py
 
 ## 🚀 Step 7: Launch Backend Services
 
-### 7.1 Start CLIP Service (Port 8001)
+### 7.1 Start CLIP Service (Port 8000)
 ```powershell
 # Navigate to clip directory
 cd clip
@@ -438,7 +438,7 @@ python -m venv clip-env
 pip install -r requirements.txt
 
 # Start CLIP FastAPI service
-uvicorn fast_clip_service:app --host 0.0.0.0 --port 8001 --reload
+uvicorn fast_clip_service:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### 7.2 Start Main Backend API (Port 7000)
@@ -520,7 +520,7 @@ npm run tauri:build
 ## 🔗 Step 9: Service Integration
 
 ### 9.1 Verify All Services Running
-- ✅ **CLIP Service**: http://localhost:8001
+- ✅ **CLIP Service**: http://localhost:8000
 - ✅ **Backend API**: http://localhost:7000  
 - ✅ **Frontend**: http://localhost:5173
 - ✅ **Stable Diffusion**: http://127.0.0.1:7860
