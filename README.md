@@ -5,6 +5,17 @@ Introducing an intelligent revolution in personal style — this project combine
 Powered by **Qualcomm's Snapdragon X Elite** platform, it harnesses the capabilities of **OpenAI CLIP**, **Anything LLM (Ollama 3.1 8B)**, and **Stable Diffusion** running natively on-device using the **NPU**, thus transforming style discovery, outfit recommendations, and closet management for modern users under **real-time constraints**.  
 
 ---
+OUR TEAM
+
+Ranjan Patil: sp8171@nyu.edu
+
+Shikhar Malik: sm12762@nyu.edu 
+
+Yashdeep Prasad: yp2693@nyu.edu
+
+Bhumika Shetty: bds9746@nyu.edu
+
+---
 
 ## ✨ Empowering Fashion with Edge AI
 Experience the next generation of fashion technology, where **digitized virtual closets** meet **contextual event-based outfit recommendations**.  
