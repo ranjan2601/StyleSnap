@@ -1,0 +1,4 @@
+api_key: "VGSXDWY-QW7MVX9-QH706R4-BDZT0XR"
+model_server_base_url: "http://localhost:3001/api/v1/workspace"
+workspace_slug: "hackathon"
+stream_timeout: 120

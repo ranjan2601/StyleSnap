@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Camera, User, Grid3X3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ interface ClothingItem {
   id: string;
   imageUrl: string;
   name: string;
+  tags?: any;
 }
 
 interface UserPhoto {
@@ -20,46 +21,66 @@ interface UserPhoto {
   name: string;
 }
 
-// Sample wardrobe items to demonstrate functionality
-const initialWardrobe: ClothingItem[] = [
-  {
-    id: '1',
-    imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-    name: 'White Cotton T-Shirt',
-  },
-  {
-    id: '2', 
-    imageUrl: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop',
-    name: 'Dark Denim Jeans',
-  },
-  {
-    id: '3',
-    imageUrl: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop',
-    name: 'White Sneakers',
-  },
-  {
-    id: '4',
-    imageUrl: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=400&fit=crop',
-    name: 'Black Blazer',
-  },
-  {
-    id: '5',
-    imageUrl: 'https://images.unsplash.com/photo-1583743814966-8936f37f8302?w=400&h=400&fit=crop',
-    name: 'Blue Dress Shirt',
-  },
-  {
-    id: '6',
-    imageUrl: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop',
-    name: 'Summer Dress',
-  },
-];
-
 const Wardrobe = () => {
-  const [wardrobeItems, setWardrobeItems] = useState<ClothingItem[]>(initialWardrobe);
+  const [wardrobeItems, setWardrobeItems] = useState<ClothingItem[]>([]);
   const [userPhotos, setUserPhotos] = useState<UserPhoto[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Function to fetch wardrobe items from backend
+  const fetchWardrobeItems = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('http://localhost:7000/debug/wardrobe');
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to fetch wardrobe items');
+      }
+
+      // Transform backend data to frontend format
+      const transformedItems: ClothingItem[] = result.items.map((item: any) => ({
+        id: item.id.toString(),
+        imageUrl: `http://localhost:7000/${item.image_path}`, // Use backend static file serving
+        name: extractNameFromTags(item.tags) || `Item ${item.id}`,
+        tags: item.tags
+      }));
+
+      setWardrobeItems(transformedItems);
+    } catch (error) {
+      console.error('Error fetching wardrobe items:', error);
+      toast({
+        title: "Failed to load wardrobe",
+        description: `Could not fetch your wardrobe items: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper function to extract a meaningful name from tags
+  const extractNameFromTags = (tags: any): string => {
+    if (!tags) return '';
+    
+    // Try to get description first
+    if (tags.description) return tags.description;
+    
+    // Otherwise build name from available tags
+    const parts = [];
+    if (tags.color?.value) parts.push(tags.color.value);
+    if (tags.category?.value) parts.push(tags.category.value);
+    if (tags.style?.value) parts.push(tags.style.value);
+    
+    return parts.join(' ') || '';
+  };
+
+  // Fetch wardrobe items on component mount
+  useEffect(() => {
+    fetchWardrobeItems();
+  }, []);
 
   const handleAddItem = () => {
     fileInputRef.current?.click();
@@ -81,28 +102,35 @@ const Wardrobe = () => {
     setIsUploading(true);
     
     try {
-      // Create image URL from uploaded file
-      const imageUrl = URL.createObjectURL(file);
-      
-      // Create new clothing item
-      const newItem: ClothingItem = {
-        id: `${Date.now()}`,
-        imageUrl,
-        name: file.name.split('.')[0] || `Clothing Item ${wardrobeItems.length + 1}`,
-      };
-      
-      setWardrobeItems(prev => [...prev, newItem]);
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload to backend API
+      const response = await fetch('http://localhost:7000/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Upload failed');
+      }
+
+      // Refresh wardrobe items from backend after successful upload
+      await fetchWardrobeItems();
       
       toast({
         title: "Item added!",
-        description: "Your clothing item has been added to your wardrobe.",
+        description: `Your clothing item has been uploaded and analyzed successfully.`,
       });
       
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
         title: "Upload failed",
-        description: "Could not upload the image. Please try again.",
+        description: `Could not upload the image: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
@@ -157,7 +185,16 @@ const Wardrobe = () => {
           </TabsList>
           
           <TabsContent value="clothes">
-            <WardrobeGrid items={wardrobeItems} onAddItem={handleAddItem} isUploading={isUploading} />
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading your wardrobe...</p>
+                </div>
+              </div>
+            ) : (
+              <WardrobeGrid items={wardrobeItems} onAddItem={handleAddItem} isUploading={isUploading} />
+            )}
             <input
               ref={fileInputRef}
               type="file"

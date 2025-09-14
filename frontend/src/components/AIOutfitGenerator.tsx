@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Sparkles, Shuffle, X, CheckCircle2, MousePointerClick, Plus, Upload } from 'lucide-react';
+import { Sparkles, Shuffle, X, CheckCircle2, MousePointerClick, Plus, Upload, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -32,39 +32,117 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
   const [isApplying, setIsApplying] = useState(false);
   const [appliedPreviewUrl, setAppliedPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGeneratingTryOn, setIsGeneratingTryOn] = useState(false);
+  const [tryOnImageUrl, setTryOnImageUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const generateOutfit = async () => {
-    if (!prompt.trim() || wardrobeItems.length === 0) return;
+    if (!prompt.trim()) return;
     
     setIsGenerating(true);
     setCurrentPrompt(prompt);
     
-    // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Randomly select 2-4 items from wardrobe
-    const shuffled = [...wardrobeItems].sort(() => 0.5 - Math.random());
-    const outfitSize = Math.min(Math.floor(Math.random() * 3) + 2, wardrobeItems.length);
-    const outfit = shuffled.slice(0, outfitSize);
-    
-    setGeneratedOutfit(outfit);
-    setIsGenerating(false);
-    setShowOutfit(true);
+    try {
+      // Call backend search API
+      const response = await fetch('http://localhost:7000/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_input: prompt }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to generate outfit');
+      }
+
+      // Convert image paths to ClothingItem objects for display
+      const outfitItems: ClothingItem[] = result.outfit_items.map((imagePath: string, index: number) => {
+        // Convert backend path to frontend URL
+        const cleanPath = imagePath.replace('\\', '/');
+        const filename = cleanPath.split('/').pop();
+        const imageUrl = `http://localhost:7000/uploads/${filename}`;
+        return {
+          id: `outfit-${index}-${Date.now()}`,
+          imageUrl,
+          name: `Outfit Item ${index + 1}`,
+        };
+      });
+
+      setGeneratedOutfit(outfitItems);
+      setShowOutfit(true);
+      
+      toast({
+        title: "Outfit generated!",
+        description: result.reasoning || "AI has selected the perfect outfit for you.",
+      });
+      
+    } catch (error) {
+      console.error('Error generating outfit:', error);
+      toast({
+        title: "Generation failed",
+        description: `Could not generate outfit: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const regenerateOutfit = async () => {
+    if (!currentPrompt.trim()) return;
+    
     setIsGenerating(true);
     
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const shuffled = [...wardrobeItems].sort(() => 0.5 - Math.random());
-    const outfitSize = Math.min(Math.floor(Math.random() * 3) + 2, wardrobeItems.length);
-    const outfit = shuffled.slice(0, outfitSize);
-    
-    setGeneratedOutfit(outfit);
-    setIsGenerating(false);
+    try {
+      // Call backend search API with the same prompt
+      const response = await fetch('http://localhost:7000/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_input: currentPrompt }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to regenerate outfit');
+      }
+
+      // Convert image paths to ClothingItem objects for display
+      const outfitItems: ClothingItem[] = result.outfit_items.map((imagePath: string, index: number) => {
+        // Convert backend path to frontend URL
+        const cleanPath = imagePath.replace('\\', '/');
+        const filename = cleanPath.split('/').pop();
+        const imageUrl = `http://localhost:7000/uploads/${filename}`;
+        return {
+          id: `outfit-${index}-${Date.now()}`,
+          imageUrl,
+          name: `Outfit Item ${index + 1}`,
+        };
+      });
+
+      setGeneratedOutfit(outfitItems);
+      
+      toast({
+        title: "Outfit regenerated!",
+        description: result.reasoning || "AI has selected a new outfit for you.",
+      });
+      
+    } catch (error) {
+      console.error('Error regenerating outfit:', error);
+      toast({
+        title: "Regeneration failed",
+        description: `Could not regenerate outfit: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const closeOutfit = () => {
@@ -72,6 +150,71 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
     setPrompt('');
     setSelectedItemIds([]);
     setAppliedPreviewUrl(null);
+    setTryOnImageUrl(null);
+  };
+
+  const handleVirtualTryOn = async () => {
+    if (selectedItemIds.length === 0) {
+      toast({
+        title: "No items selected",
+        description: "Please select at least one clothing item for Virtual Try On.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingTryOn(true);
+    setTryOnImageUrl(null);
+
+    try {
+      // Get the image paths for selected items
+      const selectedItems = selectedItemIds
+        .map(id => generatedOutfit.find(item => item.id === id))
+        .filter((item): item is ClothingItem => Boolean(item));
+
+      // Convert frontend URLs back to backend paths
+      const selectedPaths = selectedItems.map(item => {
+        const filename = item.imageUrl.split('/').pop();
+        return `uploads/${filename}`;
+      });
+
+      const response = await fetch('http://localhost:7000/virtual-try-on', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          selected_items: selectedPaths,
+          prompt_style: currentPrompt.toLowerCase().includes('formal') ? 'formal' :
+                       currentPrompt.toLowerCase().includes('party') ? 'party' :
+                       currentPrompt.toLowerCase().includes('beach') ? 'beach' :
+                       currentPrompt.toLowerCase().includes('workout') ? 'workout' : 'casual'
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to generate Virtual Try On image');
+      }
+
+      setTryOnImageUrl(result.image_url);
+      
+      toast({
+        title: "Virtual Try On Complete!",
+        description: `Generated image using: ${result.clothing_description}`,
+      });
+
+    } catch (error) {
+      console.error('Error generating Virtual Try On:', error);
+      toast({
+        title: "Virtual Try On failed",
+        description: `Could not generate image: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingTryOn(false);
+    }
   };
 
   const loadHtmlImage = (src: string) =>
@@ -327,6 +470,24 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
 
                   <div className="space-y-3">
                     <Button
+                      onClick={handleVirtualTryOn}
+                      disabled={selectedItemIds.length === 0 || isGeneratingTryOn}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 font-medium"
+                    >
+                      {isGeneratingTryOn ? (
+                        <>
+                          <div className="outfit-shimmer w-4 h-4 rounded mr-2"></div>
+                          Generating Virtual Try On...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="w-4 h-4 mr-2" />
+                          Virtual Try On ({selectedItemIds.length} items)
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
                       onClick={applySelectedToFirstPhoto}
                       disabled={selectedItemIds.length === 0 || userPhotos.length === 0 || isApplying}
                       className="w-full bg-primary text-primary-foreground hover:bg-luxury-gold-dark disabled:opacity-50"
@@ -352,6 +513,28 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
                           </a>
                           <Button variant="outline" onClick={() => setAppliedPreviewUrl(null)} className="text-sm">
                             Clear Preview
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {tryOnImageUrl && (
+                      <div className="border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4">
+                        <h5 className="text-sm font-medium text-charcoal mb-2 flex items-center">
+                          <Wand2 className="w-4 h-4 mr-2 text-purple-600" />
+                          Virtual Try On Result
+                        </h5>
+                        <img src={tryOnImageUrl} alt="Virtual Try On result" className="w-full rounded-lg shadow-md" />
+                        <div className="mt-3 flex gap-3">
+                          <a
+                            href={tryOnImageUrl}
+                            download={`virtual-try-on-${Date.now()}.png`}
+                            className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 text-sm font-medium"
+                          >
+                            Download Virtual Try On
+                          </a>
+                          <Button variant="outline" onClick={() => setTryOnImageUrl(null)} className="text-sm">
+                            Clear Result
                           </Button>
                         </div>
                       </div>
