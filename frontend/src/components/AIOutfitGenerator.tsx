@@ -43,7 +43,7 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
     
     try {
       // Call backend search API
-      const response = await fetch('http://localhost:8000/search', {
+      const response = await fetch('http://localhost:7000/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,7 +62,7 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
         // Convert backend path to frontend URL
         const cleanPath = imagePath.replace('\\', '/');
         const filename = cleanPath.split('/').pop();
-        const imageUrl = `http://localhost:8000/uploads/${filename}`;
+        const imageUrl = `http://localhost:7000/uploads/${filename}`;
         return {
           id: `outfit-${index}-${Date.now()}`,
           imageUrl,
@@ -97,7 +97,7 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
     
     try {
       // Call backend search API with the same prompt
-      const response = await fetch('http://localhost:8000/search', {
+      const response = await fetch('http://localhost:7000/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
         // Convert backend path to frontend URL
         const cleanPath = imagePath.replace('\\', '/');
         const filename = cleanPath.split('/').pop();
-        const imageUrl = `http://localhost:8000/uploads/${filename}`;
+        const imageUrl = `http://localhost:7000/uploads/${filename}`;
         return {
           id: `outfit-${index}-${Date.now()}`,
           imageUrl,

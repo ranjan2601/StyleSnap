@@ -1,0 +1,5 @@
+[33mbf014a9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbackend-v1[m[33m)[m Merge branch 'clip' into backend-v1
+[33m9da5cdd[m[33m ([m[1;31morigin/clip[m[33m, [m[1;32mclip[m[33m)[m Update .gitignore for Python project and clip folder
+[33mfbc8ee8[m Add CLIP code with ONNX NPU and FastAPI server
+[33m81e8140[m[33m ([m[1;31morigin/backend-v1[m[33m)[m backend added
+[33m38e0465[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Add MIT open source license

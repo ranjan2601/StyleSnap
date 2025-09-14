@@ -40,7 +40,7 @@ SUBCATEGORIES = {
 TAG_VALUES = {
     "color": ["black", "white", "gray", "beige", "brown", "red", "blue", 
               "green", "yellow", "pink", "purple", "orange"],
-    "style": ["casual", "formal", "semi-formal", "sporty", "party", "cozy"],
+    "style": ["casual", "formal", "semi-formal", "party"],
     "season": ["summer", "winter", "all-season"],
     "pattern": ["solid", "striped", "checked", "floral", "graphic", "denim", "leather"],
 }
