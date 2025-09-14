@@ -36,35 +36,111 @@ const AIOutfitGenerator = ({ wardrobeItems, userPhotos = [], onAddClothingItem }
   const { toast } = useToast();
 
   const generateOutfit = async () => {
-    if (!prompt.trim() || wardrobeItems.length === 0) return;
+    if (!prompt.trim()) return;
     
     setIsGenerating(true);
     setCurrentPrompt(prompt);
     
-    // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Randomly select 2-4 items from wardrobe
-    const shuffled = [...wardrobeItems].sort(() => 0.5 - Math.random());
-    const outfitSize = Math.min(Math.floor(Math.random() * 3) + 2, wardrobeItems.length);
-    const outfit = shuffled.slice(0, outfitSize);
-    
-    setGeneratedOutfit(outfit);
-    setIsGenerating(false);
-    setShowOutfit(true);
+    try {
+      // Call backend search API
+      const response = await fetch('http://localhost:8000/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_input: prompt }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to generate outfit');
+      }
+
+      // Convert image paths to ClothingItem objects for display
+      const outfitItems: ClothingItem[] = result.outfit_items.map((imagePath: string, index: number) => {
+        // Convert backend path to frontend URL
+        const cleanPath = imagePath.replace('\\', '/');
+        const filename = cleanPath.split('/').pop();
+        const imageUrl = `http://localhost:8000/uploads/${filename}`;
+        return {
+          id: `outfit-${index}-${Date.now()}`,
+          imageUrl,
+          name: `Outfit Item ${index + 1}`,
+        };
+      });
+
+      setGeneratedOutfit(outfitItems);
+      setShowOutfit(true);
+      
+      toast({
+        title: "Outfit generated!",
+        description: result.reasoning || "AI has selected the perfect outfit for you.",
+      });
+      
+    } catch (error) {
+      console.error('Error generating outfit:', error);
+      toast({
+        title: "Generation failed",
+        description: `Could not generate outfit: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const regenerateOutfit = async () => {
+    if (!currentPrompt.trim()) return;
+    
     setIsGenerating(true);
     
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const shuffled = [...wardrobeItems].sort(() => 0.5 - Math.random());
-    const outfitSize = Math.min(Math.floor(Math.random() * 3) + 2, wardrobeItems.length);
-    const outfit = shuffled.slice(0, outfitSize);
-    
-    setGeneratedOutfit(outfit);
-    setIsGenerating(false);
+    try {
+      // Call backend search API with the same prompt
+      const response = await fetch('http://localhost:8000/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_input: currentPrompt }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to regenerate outfit');
+      }
+
+      // Convert image paths to ClothingItem objects for display
+      const outfitItems: ClothingItem[] = result.outfit_items.map((imagePath: string, index: number) => {
+        // Convert backend path to frontend URL
+        const cleanPath = imagePath.replace('\\', '/');
+        const filename = cleanPath.split('/').pop();
+        const imageUrl = `http://localhost:8000/uploads/${filename}`;
+        return {
+          id: `outfit-${index}-${Date.now()}`,
+          imageUrl,
+          name: `Outfit Item ${index + 1}`,
+        };
+      });
+
+      setGeneratedOutfit(outfitItems);
+      
+      toast({
+        title: "Outfit regenerated!",
+        description: result.reasoning || "AI has selected a new outfit for you.",
+      });
+      
+    } catch (error) {
+      console.error('Error regenerating outfit:', error);
+      toast({
+        title: "Regeneration failed",
+        description: `Could not regenerate outfit: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const closeOutfit = () => {
