@@ -7,12 +7,17 @@ import uvicorn
 import numpy as np
 import requests
 import yaml
+import sys
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List
+
+# Add the parent directory to sys.path to import sd_api_client
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sd_api_client import StableDiffusionAPIClient, create_wedding_dress_payload
 
 # Create uploads directory if it doesn't exist
 os.makedirs("uploads", exist_ok=True)
@@ -43,6 +48,10 @@ LLM_STREAM_TIMEOUT = config.get("stream_timeout", 120)
 # Pydantic models
 class SearchRequest(BaseModel):
     user_input: str
+
+class GenerateImageRequest(BaseModel):
+    selected_items: List[str]  # List of image paths
+    prompt_style: str = "casual"  # Style context for the outfit
 
 app = FastAPI()
 
@@ -82,6 +91,10 @@ init_db()
 
 # Mount static files to serve uploaded images
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+# Mount static files to serve generated images
+generated_images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "generated_images", "images")
+if os.path.exists(generated_images_dir):
+    app.mount("/generated", StaticFiles(directory=generated_images_dir), name="generated")
 
 @app.get("/")
 async def health_check():
@@ -520,6 +533,102 @@ async def search_images(request: SearchRequest):
 		print(f"Error in search endpoint: {str(e)}")
 		return JSONResponse(
 			{"success": False, "error": f"Search failed: {str(e)}"}, 
+			status_code=500
+		)
+
+@app.post("/virtual-try-on")
+async def virtual_try_on(request: GenerateImageRequest):
+	"""
+	Generate a Virtual Try On image using Stable Diffusion based on selected clothing items
+	"""
+	try:
+		print(f"👗 DEBUG: Received Virtual Try On request: {request}")
+		print(f"👗 DEBUG: Selected items: {request.selected_items}")
+		print(f"👗 DEBUG: Prompt style: {request.prompt_style}")
+		
+		if not request.selected_items:
+			return JSONResponse(
+				{"success": False, "error": "No clothing items selected for Virtual Try On"}, 
+				status_code=400
+			)
+		
+		# Analyze selected items to create a descriptive prompt
+		clothing_descriptions = []
+		for item_path in request.selected_items:
+			# Get item details from database
+			conn = sqlite3.connect("fashion.db")
+			c = conn.cursor()
+			c.execute("SELECT tags FROM clothes WHERE image_path = ?", (item_path,))
+			result = c.fetchone()
+			conn.close()
+			
+			if result and result[0]:
+				tags = json.loads(result[0])
+				# Extract clothing details
+				category = tags.get('category', {}).get('value', 'clothing') if isinstance(tags.get('category'), dict) else tags.get('category', 'clothing')
+				color = tags.get('color', {}).get('value', '') if isinstance(tags.get('color'), dict) else tags.get('color', '')
+				style = tags.get('style', {}).get('value', '') if isinstance(tags.get('style'), dict) else tags.get('style', '')
+				
+				description_parts = [part for part in [color, style, category] if part and part != 'unknown']
+				if description_parts:
+					clothing_descriptions.append(' '.join(description_parts))
+		
+		# Create clothing description for prompt
+		clothing_text = ', '.join(clothing_descriptions) if clothing_descriptions else "stylish outfit"
+		
+		# Create style-appropriate prompt
+		style_contexts = {
+			"casual": "walking in a casual setting, relaxed atmosphere, natural lighting",
+			"formal": "in an elegant setting, professional atmosphere, studio lighting", 
+			"party": "at a stylish event, vibrant atmosphere, dramatic lighting",
+			"beach": "at the beach, sunny day, natural sunlight",
+			"workout": "in a modern gym, active setting, bright lighting"
+		}
+		
+		context = style_contexts.get(request.prompt_style, style_contexts["casual"])
+		
+		# Initialize Stable Diffusion client
+		sd_client = StableDiffusionAPIClient(
+			base_url="http://localhost:7861",
+			output_dir=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "generated_images")
+		)
+		
+		# Create custom payload based on selected items
+		payload = create_wedding_dress_payload()  # Get base payload
+		payload["prompt"] = f"ultra-realistic photo of a young person wearing {clothing_text}, {context}, cinematic photography, depth of field, highly detailed, 8k resolution, fashion photography"
+		
+		print(f"👗 DEBUG: Generated prompt: {payload['prompt']}")
+		
+		# Generate image using Stable Diffusion
+		saved_files = sd_client.generate_and_save(payload)
+		
+		if saved_files:
+			# Get the filename from the saved path
+			image_filename = os.path.basename(saved_files[0])
+			image_url = f"http://localhost:7000/generated/{image_filename}"
+			
+			response_data = {
+				"success": True,
+				"message": "Virtual Try On image generated successfully",
+				"image_url": image_url,
+				"image_filename": image_filename,
+				"prompt_used": payload["prompt"],
+				"selected_items": request.selected_items,
+				"clothing_description": clothing_text
+			}
+			
+			print(f"👗 DEBUG: Virtual Try On successful: {response_data}")
+			return JSONResponse(response_data)
+		else:
+			return JSONResponse(
+				{"success": False, "error": "Failed to generate Virtual Try On image"}, 
+				status_code=500
+			)
+		
+	except Exception as e:
+		print(f"Error in virtual-try-on endpoint: {str(e)}")
+		return JSONResponse(
+			{"success": False, "error": f"Virtual Try On failed: {str(e)}"}, 
 			status_code=500
 		)
 
