@@ -81,7 +81,23 @@ const Wardrobe = () => {
     setIsUploading(true);
     
     try {
-      // Create image URL from uploaded file
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload to backend API
+      const response = await fetch('http://localhost:8000/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Upload failed');
+      }
+
+      // Create image URL from uploaded file for display
       const imageUrl = URL.createObjectURL(file);
       
       // Create new clothing item
@@ -95,14 +111,14 @@ const Wardrobe = () => {
       
       toast({
         title: "Item added!",
-        description: "Your clothing item has been added to your wardrobe.",
+        description: `Your clothing item has been uploaded and saved. File: ${result.filename}`,
       });
       
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
         title: "Upload failed",
-        description: "Could not upload the image. Please try again.",
+        description: `Could not upload the image: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
